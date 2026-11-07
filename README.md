@@ -4,6 +4,13 @@
 
 技能来自 [claude-data-analysis-ultra](https://github.com/liangdabiao/claude-data-analysis-ultra-main)（liangdabiao）。
 
+
+## 安装
+
+```bash
+dsh plugin --profile web add dsh-data-analysis
+```
+
 ## 许可
 
 MIT
