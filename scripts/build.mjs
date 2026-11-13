@@ -1,6 +1,6 @@
-// 浏览器半边打包：client.js → dist/client.js（单文件 CJS + ModuleLoader 包装）。
-// colorSystemMapping.json 被 esbuild 内联进 bundle（291 色号映射，浏览器本地查色号用）。
-import { build } from 'esbuild'
+// 浏览器半边打包：client.cjs → dist/client.js（单文件 CJS + ModuleLoader 包装）。
+// dist/client.js 随仓库提交：git / 源码直装不会跑构建，产物必须在包里。
+import { build, context } from 'esbuild'
 import { readFileSync, readdirSync, rmSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,9 +28,12 @@ function checkBundle() {
   }
 }
 
+const WATCH = process.argv.includes('--watch')
+
 rmSync(join(root, 'dist'), { recursive: true, force: true })
-await build({
-  entryPoints: [join(root, 'client.js')],
+
+const options = {
+  entryPoints: [join(root, 'client.cjs')],
   outfile: join(root, 'dist/client.js'),
   bundle: true,
   format: 'cjs',
@@ -39,16 +42,19 @@ await build({
   external: CLIENT_EXTERNALS,
   banner: { js: banner },
   footer: { js: footer },
-  minify: !process.argv.includes('--watch'),
-  sourcemap: process.argv.includes('--watch') ? 'inline' : false,
+  minify: !WATCH,
+  sourcemap: WATCH ? 'inline' : false,
   logLevel: 'info',
   treeShaking: false, // 防止 esbuild tree-shake 掉只在闭包内引用的组件函数
-})
+}
 
-if (!process.argv.includes('--watch')) {
+if (WATCH) {
+  const c = await context(options)
+  await c.watch()
+  console.log(`[build] 监听 client.cjs → dist/client.js (id=${PLUGIN_ID})，Ctrl+C 退出`)
+} else {
+  await build(options)
   checkBundle()
   const size = (Buffer.byteLength(readFileSync(join(root, 'dist/client.js'))) / 1024).toFixed(1)
   console.log(`[build] dist/client.js ${size} KB  (id=${PLUGIN_ID})`)
-} else {
-  console.log(`[build] watching client.js → dist/client.js (id=${PLUGIN_ID})`)
 }
