@@ -11,7 +11,7 @@
 ## 安装与升级
 
 ```bash
-dsh plugin --profile web add dsh-data-analysis
+dsh plugin --profile web add https://github.com/liangdabiao/dsh-data-analysis
 ```
 
 第三方插件升级 = 卸载重装：`dsh plugin --profile web remove dsh-data-analysis`，再执行上面的 add。装完记得在插件列表点「立即启用」。
